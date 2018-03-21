@@ -1,5 +1,7 @@
 #include <string>
 #include <cstdio>
+#include <memory>
+#include "ElfFile.hpp"
 #include "ElfHandler.hpp"
 
 void usage(const char *const program_name)
@@ -16,7 +18,7 @@ int main(int argc, char** argv){
 
   const auto elffile = std::string{argv[2]};
 
-  ElfHandler elf(elffile);
+  ElfFile elf(elffile);
   if(!elf.checkFile()){
     fprintf(stderr, "Invalid file. Header does not match expected format!");
     exit(EXIT_FAILURE);
@@ -27,16 +29,19 @@ int main(int argc, char** argv){
   const auto archClass = elf.getArchClass();
 
   switch(archClass){
-  case ElfHandler::ArchClass::Bit32:
+  case ElfFile::ArchClass::Bit32:
     printf(" -> Arch Class: 32-bit\n");
     break;
-  case ElfHandler::ArchClass::Bit64:
+  case ElfFile::ArchClass::Bit64:
     printf(" -> Arch Class: 64-bit\n");
     break;
   default:
     printf(" -> Arch Class: unknown\n");
     break;
   }
+
+  const auto handler = elf.getHandler();
+  handler->getSymbolTable();
   
   exit(EXIT_SUCCESS);
 }
