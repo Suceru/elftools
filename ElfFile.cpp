@@ -91,22 +91,24 @@ public:
   ElfHandlerImpl(const char* memory) :
     ElfHandler(),
     _memory(memory),
-    _elfHeader(*reinterpret_cast<const ElfHeader*>(_memory)),
-    _programHeaders(reinterpret_cast<ProgramHeader*>(_elfHeader.e_phoff),
-		    reinterpret_cast<ProgramHeader*>(_elfHeader.e_phoff + _elfHeader.e_phentsize * (_elfHeader.e_phnum + 1))),
-    _sectionHeaders(reinterpret_cast<SectionHeader*>(_elfHeader.e_shoff),
-		    reinterpret_cast<SectionHeader*>(_elfHeader.e_shoff + _elfHeader.e_shentsize * (_elfHeader.e_shnum + 1)))
+    _elfHeader(*reinterpret_cast<const ElfHeader*>(memory)),
+    _programHeaders(reinterpret_cast<const ProgramHeader*>(&memory[_elfHeader.e_phoff]),
+		    reinterpret_cast<const ProgramHeader*>(&memory[_elfHeader.e_phoff + _elfHeader.e_phentsize * (_elfHeader.e_phnum + 1)])),
+    _sectionHeaders(reinterpret_cast<const SectionHeader*>(&memory[_elfHeader.e_shoff]),
+		    reinterpret_cast<const SectionHeader*>(&memory[_elfHeader.e_shoff + _elfHeader.e_shentsize * (_elfHeader.e_shnum + 1)]))
   {};
 
-   virtual const SymbolTable& getSymbolTable() const {
-     std::cout << "Hello World!" << std::endl;
-   };
-
+  virtual const SymbolTable& getSymbolTable() const{
+    return _symbolTable;
+  };
+  
 private:
   const char* const  _memory;
   const ElfHeader&   _elfHeader;
-  const std::vector<std::reference_wrapper<ProgramHeader>> _programHeaders;
-  const std::vector<std::reference_wrapper<SectionHeader>> _sectionHeaders;
+  const std::vector<std::reference_wrapper<const ProgramHeader>> _programHeaders;
+  const std::vector<std::reference_wrapper<const SectionHeader>> _sectionHeaders;
+
+  SymbolTable _symbolTable;
 };
 
 }
