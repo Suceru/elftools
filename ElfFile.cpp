@@ -85,7 +85,7 @@ const char* ElfFile::getMemory() const{
 
 namespace {
 
-template <typename ElfHeader, typename ProgramHeader, typename SectionHeader>
+template <typename ElfHeader, typename ProgramHeader, typename SectionHeader, typename ElfSymbol>
 class ElfHandlerImpl : public ElfHandler {
 public:
   ElfHandlerImpl(const char* memory) :
@@ -96,8 +96,29 @@ public:
 		    reinterpret_cast<const ProgramHeader*>(&memory[_elfHeader.e_phoff + _elfHeader.e_phentsize * (_elfHeader.e_phnum + 1)])),
     _sectionHeaders(reinterpret_cast<const SectionHeader*>(&memory[_elfHeader.e_shoff]),
 		    reinterpret_cast<const SectionHeader*>(&memory[_elfHeader.e_shoff + _elfHeader.e_shentsize * (_elfHeader.e_shnum + 1)]))
-  {};
+  {
+    generateSymbolTable();
+  };
 
+private:
+  void generateSymbolTable(){
+    for(const auto& sectionHeaderRef : _sectionHeaders){
+      const auto& sectionHeader = sectionHeaderRef.get();
+      if(sectionHeader.sh_type == SHT_SYMTAB){
+	const auto stringTable = reinterpret_cast<const char*>(&_memory[_sectionHeaders[sectionHeader.sh_link].get().sh_offset]);
+	const auto symbolTable = reinterpret_cast<const ElfSymbol*>(&_memory[sectionHeader.sh_offset]);
+	const auto nrSymbols = sectionHeader.sh_size/sizeof(ElfSymbol);
+	for(int i=0; i<nrSymbols; i++){
+          const auto& symbol = symbolTable[i];
+
+	  const auto symbolName = string{&stringTable[symbol.st_name]};
+	  _symbolTable[symbolName] = symbol.st_value;
+	}
+      }
+    }
+  };
+
+public:
   virtual const SymbolTable& getSymbolTable() const{
     return _symbolTable;
   };
@@ -114,8 +135,8 @@ private:
 }
 
 unique_ptr<ElfHandler> ElfFile::getHandler() const{
-  using ElfHandler32 = ElfHandlerImpl<Elf32_Ehdr, Elf32_Phdr, Elf32_Shdr>;
-  using ElfHandler64 = ElfHandlerImpl<Elf64_Ehdr, Elf64_Phdr, Elf64_Shdr>;
+  using ElfHandler32 = ElfHandlerImpl<Elf32_Ehdr, Elf32_Phdr, Elf32_Shdr, Elf32_Sym>;
+  using ElfHandler64 = ElfHandlerImpl<Elf64_Ehdr, Elf64_Phdr, Elf64_Shdr, Elf64_Sym>;
 
   const auto archClass = getArchClass();
   if(archClass == ElfFile::ArchClass::Bit32)
