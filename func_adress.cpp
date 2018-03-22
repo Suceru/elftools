@@ -1,8 +1,11 @@
+#include <iostream>
 #include <string>
 #include <cstdio>
 #include <memory>
 #include "ElfFile.hpp"
 #include "ElfHandler.hpp"
+
+using namespace std;
 
 void usage(const char *const program_name)
 {
@@ -41,7 +44,10 @@ int main(int argc, char** argv){
   }
 
   const auto handler = elf.getHandler();
-  handler->getSymbolTable();
-  
+  const auto& symbolTable = handler->getSymbolTable();
+
+  for(const auto& symbol : symbolTable)
+    cout << symbol.first << " @ " << symbol.second << "\n";
+
   exit(EXIT_SUCCESS);
 }
