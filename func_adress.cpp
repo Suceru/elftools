@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <cstdio>
@@ -9,17 +10,17 @@ using namespace std;
 
 void usage(const char *const program_name)
 {
-  printf("Usage: %s func-name elf-file\n", program_name);
+  printf("Usage: %s elf-file func-name\n", program_name);
 }
 
 int main(int argc, char** argv){
-  if(argc != 3){
+  if(argc < 2){
     fprintf(stderr, "Nr of arguments (%d) not supported!\n", argc-1);
     usage(argv[0]);
     exit(EXIT_FAILURE);
   }
 
-  const auto elffile = std::string{argv[2]};
+  const auto elffile = std::string{argv[1]};
 
   ElfFile elf(elffile);
   if(!elf.checkFile()){
@@ -46,8 +47,16 @@ int main(int argc, char** argv){
   const auto handler = elf.getHandler();
   const auto& symbolTable = handler->getSymbolTable();
 
-  for(const auto& symbol : symbolTable)
-    cout << symbol.first << " @ " << symbol.second << "\n";
+  if(argc > 2){
+    const auto funcname = std::string{argv[2]};
 
+    for(const auto& symbol : symbolTable)
+      if(symbol.first.find(funcname) != std::string::npos)
+	cout << symbol.first << " @ " << symbol.second << "\n";
+  } else {
+    for(const auto& symbol : symbolTable)
+      cout << symbol.first << " @ " << symbol.second << "\n";
+  }
+  
   exit(EXIT_SUCCESS);
 }
