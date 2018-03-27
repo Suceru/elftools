@@ -7,5 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(func_adress func_adress.cpp ElfFile.cpp)
+add_executable(read_arch read_arch.cpp ElfFile.cpp)
 
 install(TARGETS func_adress DESTINATION bin/elftools)
+install(TARGETS read_arch DESTINATION bin/elftools)
