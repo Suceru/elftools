@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
+project (elftools)
 
 set(CMAKE_BUILD_TYPE Debug)
 
